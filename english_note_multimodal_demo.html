@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>草稿翻译机 · 英语笔记三步流水线</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #d7dce3;
+      --panel: #ffffff;
+      --soft: #f8fafc;
+      --dark: #111827;
+      --blue: #2563eb;
+      --green: #10b981;
+      --green-soft: #c8f7e5;
+      --shadow: 0 14px 38px rgba(15, 23, 42, 0.08);
+      font-family: Inter, "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--bg); }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .58; }
+    .page { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 54px; }
+    header { margin-bottom: 28px; }
+    h1 { margin: 0; font-size: clamp(30px, 4vw, 48px); letter-spacing: 0; }
+    .subtitle { margin: 10px 0 0; color: var(--muted); font-size: 17px; }
+    .keybar { margin-top: 18px; display: grid; grid-template-columns: minmax(220px, 1fr) auto auto; gap: 10px; align-items: center; }
+    input {
+      min-height: 44px; border: 1px solid var(--line); border-radius: 10px;
+      background: #fff; color: var(--ink); padding: 12px 14px;
+    }
+    .btn {
+      min-height: 44px; border: 1px solid var(--dark); border-radius: 10px; padding: 10px 16px;
+      color: #fff; background: var(--dark); font-weight: 700;
+    }
+    .btn.secondary { color: var(--ink); background: #fff; border-color: var(--line); }
+    .btn.blue { background: var(--blue); border-color: var(--blue); }
+    .btn.green { background: #059669; border-color: #059669; }
+    .upload-row {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 26px 0 24px;
+    }
+    .preview {
+      display: none; width: 220px; height: 128px; object-fit: cover;
+      border: 1px solid var(--line); border-radius: 8px; background: #fff;
+    }
+    .upload-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .done-text { color: #059669; font-weight: 700; }
+    .pipeline { display: grid; gap: 18px; }
+    .stage {
+      border: 1px solid var(--line); border-radius: 18px; background: var(--panel);
+      box-shadow: var(--shadow); padding: 20px;
+    }
+    .stage-head {
+      display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-bottom: 14px;
+    }
+    .stage-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .num {
+      width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center;
+      color: #fff; background: #020617; font-weight: 800;
+    }
+    .stage h2 { margin: 0; font-size: 22px; }
+    .badge {
+      display: inline-flex; align-items: center; min-height: 24px; padding: 3px 10px;
+      border-radius: 999px; color: #047857; background: var(--green-soft); font-size: 12px;
+    }
+    .badge.pending { color: var(--muted); background: #eef2f7; }
+    .badge.running { color: #1d4ed8; background: #dbeafe; }
+    .desc { margin: 0 0 12px; color: var(--muted); line-height: 1.65; font-size: 14px; }
+    .copy-btn { min-height: 32px; padding: 5px 12px; border-radius: 8px; }
+    .content {
+      min-height: 130px; border-radius: 8px; border: 1px solid #e5e7eb;
+      background: #fff; overflow: auto;
+    }
+    .raw {
+      background: #111827; color: #eff6ff; padding: 18px; font-family: "Cascadia Code", Consolas, monospace;
+      white-space: pre-wrap; line-height: 1.65;
+    }
+    .md { padding: 18px; line-height: 1.75; }
+    .md h1, .md h2, .md h3 { margin: .4em 0 .35em; }
+    .md ul, .md ol { padding-left: 1.4em; }
+    .md table { width: 100%; border-collapse: collapse; margin: 12px 0; table-layout: fixed; }
+    .md th, .md td { border: 1px solid #dbe2ea; padding: 10px; text-align: left; vertical-align: top; word-break: break-word; }
+    .md th { background: #ecfeff; color: #0f766e; }
+    iframe { width: 100%; height: 620px; border: 0; background: #fff; }
+    .final-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .status { color: var(--muted); margin: 10px 0 0; line-height: 1.6; }
+    @media (max-width: 760px) {
+      .keybar { grid-template-columns: 1fr; }
+      .preview { width: 100%; height: auto; max-height: 260px; }
+      .stage-head { flex-direction: column; }
+      .btn, input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>草稿翻译机 · 英语笔记三步流水线</h1>
+      <p class="subtitle">上传一张英语手写笔记、PPT 或板书照片，模型自动依次完成：原始转录 → 复习计划 → HTML 归档。</p>
+      <div class="keybar">
+        <input id="apiKey" type="password" placeholder="粘贴 STEP_API_KEY">
+        <button class="btn secondary" id="sampleBtn">填入示例</button>
+        <button class="btn blue" id="runBtn">一键生成三段</button>
+      </div>
+      <p class="status" id="status">上传图片后点击“一键生成三段”，无需逐步点击。</p>
+    </header>
+
+    <section class="upload-row">
+      <img class="preview" id="preview" alt="上传图片预览">
+      <div class="upload-actions">
+        <input id="imageInput" type="file" accept="image/*">
+        <span class="done-text" id="doneText"></span>
+      </div>
+    </section>
+
+    <section class="pipeline">
+      <article class="stage">
+        <div class="stage-head">
+          <div>
+            <div class="stage-title"><span class="num">1</span><h2>原始转录</h2><span class="badge pending" id="status1">pending</span></div>
+            <p class="desc">第 1 次模型调用：多模态读图，输出整理后的 Markdown 原始转录，保留涂改、不确定字和记忆符号。</p>
+          </div>
+          <button class="btn secondary copy-btn" data-copy="raw">复制 MD</button>
+        </div>
+        <div class="content raw" id="rawBlock">等待生成。</div>
+      </article>
+
+      <article class="stage">
+        <div class="stage-head">
+          <div>
+            <div class="stage-title"><span class="num">2</span><h2>复习计划</h2><span class="badge pending" id="status2">pending</span></div>
+            <p class="desc">第 2 次模型调用：基于上一段原始转录，制作 7 日复习计划、重点单词和易错提醒。</p>
+          </div>
+          <button class="btn secondary copy-btn" data-copy="plan">复制 MD</button>
+        </div>
+        <div class="content md" id="planBlock">等待生成。</div>
+      </article>
+
+      <article class="stage">
+        <div class="stage-head">
+          <div>
+            <div class="stage-title"><span class="num">3</span><h2>整合 HTML 归档</h2><span class="badge pending" id="status3">pending</span></div>
+            <p class="desc">第 3 次模型调用：把原始转录和复习计划整合成一份可独立打开的 HTML 英语笔记页面。</p>
+          </div>
+          <button class="btn secondary copy-btn" data-copy="html">复制 HTML</button>
+        </div>
+        <div class="content"><iframe id="htmlPreview" title="English note HTML preview"></iframe></div>
+        <div class="final-actions">
+          <button class="btn green" id="downloadHtmlBtn">下载 HTML</button>
+          <button class="btn secondary" id="downloadMdBtn">下载 Markdown</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const endpoint = "https://api.stepfun.com/v1/chat/completions";
+    const model = "step-3.7-flash";
+    const apiKeyEl = document.querySelector("#apiKey");
+    const imageInput = document.querySelector("#imageInput");
+    const preview = document.querySelector("#preview");
+    const statusEl = document.querySelector("#status");
+    const doneText = document.querySelector("#doneText");
+    const rawBlock = document.querySelector("#rawBlock");
+    const planBlock = document.querySelector("#planBlock");
+    const htmlPreview = document.querySelector("#htmlPreview");
+    let imageDataUrl = "";
+    let rawMarkdown = "";
+    let planMarkdown = "";
+    let finalHtml = "";
+
+    const sampleRaw = `# 原始转录\n\n## Main Topic\nPresent Perfect Tense\n\n## Key Points\n- have / has + past participle\n- used for experiences and unfinished time\n- signal words: already, yet, ever, never\n\n## Example\nI have finished my homework.`;
+    const samplePlan = `## 笔记概览\n- 主题判断：Present Perfect Tense\n- 难度估计：初中到高中衔接\n- 核心知识点：结构、用法、信号词\n\n## 重点清单\n- 必背单词：already, yet, ever, never\n- 必懂语法：have / has + past participle\n\n## 7 日复习计划\n| 日期 | 任务 | 预计时长 |\n|---|---|---|\n| 第 1 天 | 整理完成时结构和例句 | 25 分钟 |\n| 第 2 天 | 背信号词并造句 | 20 分钟 |\n| 第 3 天 | 对比一般过去时 | 25 分钟 |\n| 第 7 天 | 写一段学习总结 | 30 分钟 |`;
+
+    function setStatus(text) { statusEl.textContent = text; }
+    function setStage(id, state) {
+      const el = document.querySelector(`#status${id}`);
+      el.textContent = state;
+      el.className = `badge ${state === "done" ? "" : state === "running" ? "running" : "pending"}`;
+    }
+    function escapeHtml(text) { return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+    function renderInlineMarkdown(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    }
+    function mdToHtml(md) {
+      const lines = String(md || "").replace(/\r\n/g, "\n").split("\n");
+      const html = [];
+      let inCode = false;
+      let codeLines = [];
+      let inUl = false;
+      let inOl = false;
+      let inTable = false;
+      function closeLists() {
+        if (inUl) { html.push("</ul>"); inUl = false; }
+        if (inOl) { html.push("</ol>"); inOl = false; }
+      }
+      function closeTable() {
+        if (inTable) { html.push("</tbody></table>"); inTable = false; }
+      }
+      for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        if (trimmed.startsWith("```")) {
+          if (inCode) {
+            html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+            codeLines = [];
+            inCode = false;
+          } else {
+            closeLists(); closeTable(); inCode = true;
+          }
+          continue;
+        }
+        if (inCode) { codeLines.push(line); continue; }
+        if (!trimmed) { closeLists(); closeTable(); continue; }
+        if (/^\|(.+)\|$/.test(trimmed)) {
+          closeLists();
+          const next = lines[i + 1]?.trim() || "";
+          const isSeparator = /^\|[\s:-]+\|/.test(next);
+          const cells = trimmed.slice(1, -1).split("|").map(cell => renderInlineMarkdown(cell.trim()));
+          if (!inTable) {
+            html.push("<table>");
+            if (isSeparator) {
+              html.push(`<thead><tr>${cells.map(cell => `<th>${cell}</th>`).join("")}</tr></thead><tbody>`);
+              i += 1;
+            } else {
+              html.push("<tbody>");
+              html.push(`<tr>${cells.map(cell => `<td>${cell}</td>`).join("")}</tr>`);
+            }
+            inTable = true;
+          } else {
+            html.push(`<tr>${cells.map(cell => `<td>${cell}</td>`).join("")}</tr>`);
+          }
+          continue;
+        }
+        closeTable();
+        if (/^####\s+/.test(trimmed)) { closeLists(); html.push(`<h4>${renderInlineMarkdown(trimmed.replace(/^####\s+/, ""))}</h4>`); continue; }
+        if (/^###\s+/.test(trimmed)) { closeLists(); html.push(`<h3>${renderInlineMarkdown(trimmed.replace(/^###\s+/, ""))}</h3>`); continue; }
+        if (/^##\s+/.test(trimmed)) { closeLists(); html.push(`<h2>${renderInlineMarkdown(trimmed.replace(/^##\s+/, ""))}</h2>`); continue; }
+        if (/^#\s+/.test(trimmed)) { closeLists(); html.push(`<h1>${renderInlineMarkdown(trimmed.replace(/^#\s+/, ""))}</h1>`); continue; }
+        if (/^>\s?/.test(trimmed)) { closeLists(); html.push(`<blockquote>${renderInlineMarkdown(trimmed.replace(/^>\s?/, ""))}</blockquote>`); continue; }
+        if (/^[-*]\s+/.test(trimmed)) {
+          if (!inUl) { closeLists(); html.push("<ul>"); inUl = true; }
+          html.push(`<li>${renderInlineMarkdown(trimmed.replace(/^[-*]\s+/, ""))}</li>`);
+          continue;
+        }
+        if (/^\d+\.\s+/.test(trimmed)) {
+          if (!inOl) { closeLists(); html.push("<ol>"); inOl = true; }
+          html.push(`<li>${renderInlineMarkdown(trimmed.replace(/^\d+\.\s+/, ""))}</li>`);
+          continue;
+        }
+        closeLists();
+        html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+      }
+      if (inCode) html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+      closeLists(); closeTable();
+      return html.join("");
+    }
+    function fallbackHtml() {
+      return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>English Study Note</title><style>body{margin:0;background:#f8fafc;color:#0f172a;font-family:Arial,"Microsoft YaHei",sans-serif}.page{max-width:900px;margin:0 auto;padding:34px}.hero{background:#111827;color:#fff;border-radius:20px;padding:30px}section{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:24px;margin-top:18px;line-height:1.75}h1{margin-top:0}h2{color:#0f766e}li{margin:8px 0}</style></head><body><main class="page"><div class="hero"><h1>English Study Note</h1><p>Generated by Step 3.7 Flash.</p></div><section>${mdToHtml(rawMarkdown)}</section><section>${mdToHtml(planMarkdown)}</section></main></body></html>`;
+    }
+    async function callMessages(messages) {
+      const apiKey = apiKeyEl.value.trim();
+      if (!apiKey) throw new Error("请先粘贴 STEP_API_KEY。");
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({ model, messages })
+      });
+      const text = await response.text();
+      const data = JSON.parse(text);
+      if (!response.ok) throw new Error(data?.error?.message || text);
+      return data?.choices?.[0]?.message?.content || text;
+    }
+    async function runPipeline() {
+      if (!imageDataUrl) { setStatus("请先上传英语笔记或 PPT 图片。"); return; }
+      try {
+        document.querySelector("#runBtn").disabled = true;
+        setStatus("正在执行第 1 段：原始转录...");
+        setStage(1, "running");
+        rawMarkdown = await callMessages([{ role: "user", content: [{ type: "text", text: "请理解这张英语笔记或 PPT 图片，生成 Markdown 原始转录。要求：保留英文内容、中文注释、例句、符号、涂改和不确定内容；不要生成复习计划。" }, { type: "image_url", image_url: { url: imageDataUrl } }] }]);
+        rawBlock.textContent = rawMarkdown;
+        setStage(1, "done");
+
+        setStatus("正在执行第 2 段：复习计划...");
+        setStage(2, "running");
+        planMarkdown = await callMessages([{ role: "user", content: `你是一位英语学习教练。请基于下面的原始转录，生成“英语学习笔记”和复习计划，而不是普通日常笔记。
+
+要求：
+1. 如果原始内容本身不是英语学习材料，也要把它转化为英语学习内容，例如：提炼可学习词汇、短语、表达、例句、口语描述和写作句型。
+2. 输出 Markdown。
+3. 必须包含这些部分：
+   - ## 笔记概览：说明这份材料适合学习哪些英语能力。
+   - ## 重点清单：列出核心词汇、短语、句型、语法点。
+   - ## 英语表达改写：把图片内容改写成 5 句英文表达，并给中文解释。
+   - ## 7 日复习计划：用 Markdown 表格输出，列为“日期 / 任务 / 预计时长”。
+   - ## 易错提醒：列出容易写错或说错的点。
+4. 不要输出与英语学习无关的普通总结。
+
+【原始转录】
+${rawMarkdown}` }]);
+        planBlock.innerHTML = mdToHtml(planMarkdown);
+        setStage(2, "done");
+
+        setStatus("正在执行第 3 段：HTML 归档...");
+        setStage(3, "running");
+        finalHtml = await callMessages([{ role: "user", content: `请把下面的原始转录和复习计划整合成一个完整 HTML 页面。只输出完整 HTML，不要解释。\n\n【原始转录】\n${rawMarkdown}\n\n【复习计划】\n${planMarkdown}` }]);
+        finalHtml = finalHtml.replace(/```html|```/g, "").trim();
+        htmlPreview.srcdoc = finalHtml;
+        setStage(3, "done");
+        doneText.textContent = "✓ 三段已完成";
+        setStatus("三段流水线已完成，可下载 HTML 或 Markdown。");
+      } catch (error) {
+        setStatus(`失败：${error.message}`);
+      } finally {
+        document.querySelector("#runBtn").disabled = false;
+      }
+    }
+    function fillSample() {
+      rawMarkdown = sampleRaw;
+      planMarkdown = samplePlan;
+      finalHtml = fallbackHtml();
+      rawBlock.textContent = rawMarkdown;
+      planBlock.innerHTML = mdToHtml(planMarkdown);
+      htmlPreview.srcdoc = finalHtml;
+      setStage(1, "done"); setStage(2, "done"); setStage(3, "done");
+      doneText.textContent = "✓ 三段已完成";
+      setStatus("已填入示例。真实使用时上传图片后点一次“一键生成三段”。");
+    }
+    function download(name, content, type) {
+      const blob = new Blob([content], { type });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { imageDataUrl = String(reader.result); preview.src = imageDataUrl; preview.style.display = "block"; doneText.textContent = ""; };
+      reader.readAsDataURL(file);
+    });
+    document.querySelector("#runBtn").addEventListener("click", runPipeline);
+    document.querySelector("#sampleBtn").addEventListener("click", fillSample);
+    document.querySelector("#downloadHtmlBtn").addEventListener("click", () => download("english-note.html", finalHtml || fallbackHtml(), "text/html;charset=utf-8"));
+    document.querySelector("#downloadMdBtn").addEventListener("click", () => download("english-note.md", `${rawMarkdown}\n\n${planMarkdown}`, "text/markdown;charset=utf-8"));
+    document.querySelectorAll("[data-copy]").forEach(button => {
+      button.addEventListener("click", async () => {
+        const type = button.dataset.copy;
+        await navigator.clipboard.writeText(type === "raw" ? rawMarkdown : type === "plan" ? planMarkdown : finalHtml);
+        setStatus("已复制。");
+      });
+    });
+    fillSample();
+  </script>
+</body>
+</html>

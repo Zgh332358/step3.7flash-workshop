@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>食材拆解 · Step 3.7 多模态 Demo</title>
+  <style>
+    :root {
+      --paper: #f6ead8;
+      --ink: #3c261b;
+      --muted: #8a6651;
+      --line: #6f4a38;
+      --accent: #d85235;
+      --accent-dark: #8f3527;
+      --card: #fff8eb;
+      --green: #347c55;
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      background-image: radial-gradient(rgba(111,74,56,.12) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .page { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 40px; }
+    .top {
+      display: flex; justify-content: space-between; align-items: center; gap: 18px;
+      padding-bottom: 18px; border-bottom: 2px dashed var(--line);
+    }
+    .brand { display: flex; gap: 14px; align-items: center; }
+    .mascot {
+      width: 54px; height: 54px; border: 2px solid var(--line); border-radius: 14px;
+      display: grid; place-items: center; background: #fff3dc; font-size: 28px;
+    }
+    h1 { margin: 0; font-size: clamp(30px, 4vw, 58px); color: #b84227; letter-spacing: 0; }
+    .tagline { margin: 4px 0 0; color: var(--muted); }
+    .keybar {
+      display: grid; grid-template-columns: minmax(220px, 1fr) auto; gap: 10px;
+      width: min(520px, 100%);
+    }
+    input, textarea {
+      border: 2px solid rgba(111,74,56,.32); border-radius: 10px; background: #fff8eb;
+      color: var(--ink); padding: 12px 14px; min-height: 44px;
+    }
+    .hero {
+      min-height: 360px; display: grid; place-items: center; text-align: center;
+      border-bottom: 2px dashed var(--line); padding: 54px 0 36px;
+    }
+    .hero h2 { margin: 10px 0; font-size: clamp(42px, 8vw, 88px); color: #bc3f24; }
+    .hero p { color: var(--muted); line-height: 1.8; }
+    .upload {
+      margin: 24px auto 0; width: min(560px, 100%); border: 2px dashed var(--line);
+      border-radius: 18px; background: rgba(255,248,235,.65); padding: 18px;
+    }
+    .upload input { width: 100%; background: transparent; border: 0; padding: 0; }
+    .preview {
+      display: none; margin-top: 14px; width: 100%; max-height: 280px; object-fit: contain;
+      border: 2px solid rgba(111,74,56,.25); border-radius: 14px; background: #fff8eb;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; justify-content: center; }
+    .chip { padding: 8px 14px; border: 2px solid var(--line); border-radius: 999px; background: #fff3dc; }
+    .btn {
+      min-height: 46px; border: 2px solid var(--line); border-radius: 999px; color: var(--ink);
+      background: #fff3dc; padding: 10px 18px; font-weight: 700;
+      box-shadow: 3px 4px 0 rgba(60,38,27,.35);
+    }
+    .btn.primary { color: #fff; background: var(--accent); border-color: var(--accent-dark); }
+    .btn.green { color: #fff; background: var(--green); border-color: #205436; }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .section { padding: 28px 0; border-bottom: 2px dashed var(--line); }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 16px; }
+    .section h3 { margin: 0; font-size: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .ingredient {
+      border: 2px solid rgba(111,74,56,.3); border-radius: 16px; background: var(--card);
+      padding: 14px; min-height: 150px;
+    }
+    .ingredient strong { display: block; font-size: 18px; margin-bottom: 8px; color: #a23a26; }
+    .ingredient span { display: block; color: var(--muted); line-height: 1.6; }
+    .mail-wrap { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; }
+    textarea { width: 100%; min-height: 220px; resize: vertical; line-height: 1.65; }
+    iframe { width: 100%; height: 620px; border: 2px solid rgba(111,74,56,.3); border-radius: 16px; background: white; }
+    .status { color: var(--muted); line-height: 1.7; }
+    @media (max-width: 900px) {
+      .top, .section-head { align-items: stretch; flex-direction: column; }
+      .keybar, .mail-wrap { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <div class="brand">
+        <div class="mascot">🍳</div>
+        <div>
+          <h1>食材拆解机</h1>
+          <p class="tagline">上传一道菜，Step 3.7 拆食材、生成菜谱邮件、保存分享。</p>
+        </div>
+      </div>
+      <div class="keybar">
+        <input id="apiKey" type="password" placeholder="粘贴 STEP_API_KEY">
+        <button class="btn" id="sampleBtn">填入示例</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="mascot" style="margin:0 auto 12px">🥘</div>
+        <h2>拆食物</h2>
+        <p>把菜品照片拆成食材卡片，再生成一封适合发给朋友的 HTML recipe mail。</p>
+        <div class="upload">
+          <input id="imageInput" type="file" accept="image/*">
+          <img class="preview" id="preview" alt="菜品图片预览">
+        </div>
+        <div class="chips">
+          <span class="chip">菜品识别</span>
+          <span class="chip">食材拆分</span>
+          <span class="chip">步骤生成</span>
+          <span class="chip">HTML Mail</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h3>我的拆解夹</h3>
+          <p class="status" id="status">上传菜品图片后开始拆解。</p>
+        </div>
+        <div class="chips">
+          <button class="btn primary" id="analyzeBtn">1. 拆解菜品</button>
+          <button class="btn" id="mailBtn">2. 生成 HTML Mail</button>
+        </div>
+      </div>
+      <div class="grid" id="ingredientGrid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h3>菜谱邮件页</h3>
+          <p class="status">可以下载为 HTML，也可以调用系统分享。</p>
+        </div>
+        <div class="chips">
+          <button class="btn green" id="downloadBtn">保存 HTML</button>
+          <button class="btn" id="shareBtn">分享</button>
+        </div>
+      </div>
+      <div class="mail-wrap">
+        <textarea id="rawOutput" placeholder="模型拆解结果会显示在这里，可手动微调后重新生成邮件。"></textarea>
+        <iframe id="mailPreview" title="HTML mail preview"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const endpoint = "https://api.stepfun.com/v1/chat/completions";
+    const model = "step-3.7-flash";
+    const apiKeyEl = document.querySelector("#apiKey");
+    const imageInput = document.querySelector("#imageInput");
+    const preview = document.querySelector("#preview");
+    const statusEl = document.querySelector("#status");
+    const grid = document.querySelector("#ingredientGrid");
+    const rawOutput = document.querySelector("#rawOutput");
+    const mailPreview = document.querySelector("#mailPreview");
+    let imageDataUrl = "";
+    let recipeData = null;
+
+    const sample = {
+      dishName: "番茄鸡蛋面",
+      summary: "一碗酸甜鲜香、适合十分钟完成的家常面。",
+      ingredients: [
+        { name: "番茄", amount: "2 个", role: "提供酸甜汤底", prep: "切块" },
+        { name: "鸡蛋", amount: "2 个", role: "增加蛋香和蛋白质", prep: "打散" },
+        { name: "面条", amount: "1 把", role: "主食", prep: "煮至八分熟" },
+        { name: "葱花", amount: "少许", role: "提香", prep: "切碎" }
+      ],
+      steps: ["炒香鸡蛋后盛出。", "番茄炒出汁，加水煮开。", "放入面条和鸡蛋，调味后撒葱花。"],
+      tips: ["番茄先炒软再加水，汤底更浓。", "面条不要煮太久，保留口感。"]
+    };
+
+    function setStatus(text) { statusEl.textContent = text; }
+    function escapeHtml(text) { return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+    function extractJson(text) {
+      const cleaned = text.replace(/```json|```/g, "").trim();
+      const start = cleaned.indexOf("{");
+      const end = cleaned.lastIndexOf("}");
+      if (start >= 0 && end > start) return JSON.parse(cleaned.slice(start, end + 1));
+      return JSON.parse(cleaned);
+    }
+
+    function renderIngredients(data) {
+      grid.innerHTML = "";
+      data.ingredients.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "ingredient";
+        card.innerHTML = `<strong>${escapeHtml(item.name)}</strong><span>用量：${escapeHtml(item.amount || "适量")}</span><span>作用：${escapeHtml(item.role || "")}</span><span>处理：${escapeHtml(item.prep || "")}</span>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function buildMailHtml(data) {
+      return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>${escapeHtml(data.dishName)} Recipe Mail</title>
+<style>body{margin:0;background:#fff7e8;color:#3c261b;font-family:Arial,"Microsoft YaHei",sans-serif}.mail{max-width:720px;margin:0 auto;padding:28px}.hero{background:#d85235;color:#fff;border-radius:16px;padding:28px}h1{margin:0;font-size:36px}.card{background:#fff;border:1px solid #ead7bd;border-radius:14px;padding:18px;margin-top:16px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.ing{background:#fff7e8;border-radius:12px;padding:12px}li{margin:8px 0;line-height:1.6}@media(max-width:620px){.grid{grid-template-columns:1fr}}</style></head><body><main class="mail"><section class="hero"><h1>${escapeHtml(data.dishName)}</h1><p>${escapeHtml(data.summary || "这是一份由 Step 3.7 生成的菜谱邮件。")}</p></section><section class="card"><h2>食材卡片</h2><div class="grid">${data.ingredients.map(i => `<div class="ing"><strong>${escapeHtml(i.name)}</strong><p>${escapeHtml(i.amount || "适量")} · ${escapeHtml(i.role || "")}</p><p>${escapeHtml(i.prep || "")}</p></div>`).join("")}</div></section><section class="card"><h2>做法</h2><ol>${(data.steps || []).map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ol></section><section class="card"><h2>小贴士</h2><ul>${(data.tips || []).map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul></section></main></body></html>`;
+    }
+
+    function renderMail(data) {
+      const html = buildMailHtml(data);
+      mailPreview.srcdoc = html;
+      return html;
+    }
+
+    async function callStep(prompt) {
+      const apiKey = apiKeyEl.value.trim();
+      if (!apiKey) throw new Error("请先粘贴 STEP_API_KEY。");
+      if (!imageDataUrl) throw new Error("请先上传菜品图片。");
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: imageDataUrl } }] }]
+        })
+      });
+      const text = await response.text();
+      const data = JSON.parse(text);
+      if (!response.ok) throw new Error(data?.error?.message || text);
+      return data?.choices?.[0]?.message?.content || text;
+    }
+
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { imageDataUrl = String(reader.result); preview.src = imageDataUrl; preview.style.display = "block"; };
+      reader.readAsDataURL(file);
+    });
+
+    document.querySelector("#sampleBtn").addEventListener("click", () => {
+      recipeData = sample;
+      rawOutput.value = JSON.stringify(sample, null, 2);
+      renderIngredients(sample);
+      renderMail(sample);
+      setStatus("已填入示例，可直接保存 HTML。");
+    });
+
+    document.querySelector("#analyzeBtn").addEventListener("click", async () => {
+      try {
+        setStatus("模型正在拆解菜品...");
+        const result = await callStep('请识别这张菜品图片，并只返回 JSON：{"dishName":"","summary":"","ingredients":[{"name":"","amount":"","role":"","prep":""}],"steps":[],"tips":[]}。不要输出解释文字。');
+        rawOutput.value = result;
+        recipeData = extractJson(result);
+        renderIngredients(recipeData);
+        setStatus(`已拆解：${recipeData.dishName}`);
+      } catch (error) { setStatus(`失败：${error.message}`); }
+    });
+
+    document.querySelector("#mailBtn").addEventListener("click", () => {
+      try {
+        recipeData = extractJson(rawOutput.value || JSON.stringify(recipeData));
+        renderMail(recipeData);
+        setStatus("HTML Mail 已生成。");
+      } catch (error) { setStatus(`无法生成 HTML：${error.message}`); }
+    });
+
+    document.querySelector("#downloadBtn").addEventListener("click", () => {
+      const html = mailPreview.srcdoc || renderMail(recipeData || sample);
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${recipeData?.dishName || "recipe-mail"}.html`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.querySelector("#shareBtn").addEventListener("click", async () => {
+      const title = recipeData?.dishName || "我的菜谱邮件";
+      if (navigator.share) await navigator.share({ title, text: "我用 Step 3.7 生成了一份菜谱邮件。" });
+      else setStatus("当前浏览器不支持系统分享，可先保存 HTML。");
+    });
+
+    renderIngredients(sample);
+    renderMail(sample);
+  </script>
+</body>
+</html>

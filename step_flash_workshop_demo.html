@@ -1,0 +1,1674 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Step 3.7 Flash Workshop</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #030712;
+      --panel: rgba(8, 17, 39, 0.86);
+      --panel-soft: rgba(12, 25, 55, 0.62);
+      --line: rgba(125, 211, 252, 0.22);
+      --line-strong: rgba(125, 211, 252, 0.5);
+      --text: #f8fafc;
+      --soft: #dbeafe;
+      --muted: #94a3b8;
+      --blue: #38bdf8;
+      --blue-2: #2563eb;
+      --cyan: #67e8f9;
+      --green: #34d399;
+      --warning: #fbbf24;
+      --danger: #fb7185;
+      --radius: 8px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+      font-family: Inter, "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 82% 10%, rgba(56, 189, 248, 0.22), transparent 24%),
+        radial-gradient(circle at 18% 18%, rgba(37, 99, 235, 0.2), transparent 26%),
+        linear-gradient(135deg, #020617 0%, #071426 52%, #030712 100%);
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.34;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.95) 0 1px, transparent 1.4px),
+        radial-gradient(circle, rgba(125,211,252,0.85) 0 1px, transparent 1.6px);
+      background-size: 110px 110px, 170px 170px;
+      background-position: 0 0, 36px 44px;
+    }
+
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.62; }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: min(1120px, calc(100% - 32px));
+      height: 100vh;
+      margin: 0 auto;
+      padding: 24px 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 14px;
+      overflow: hidden;
+    }
+
+    .global-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(8, 17, 39, 0.72);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      overflow-x: auto;
+    }
+
+    .nav-tab {
+      min-height: 38px;
+      border: 1px solid rgba(125, 211, 252, 0.18);
+      border-radius: var(--radius);
+      color: var(--soft);
+      background: rgba(2, 6, 23, 0.36);
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
+
+    .nav-tab.active {
+      color: var(--text);
+      border-color: rgba(103, 232, 249, 0.68);
+      background: rgba(14, 165, 233, 0.18);
+    }
+
+    .view {
+      min-height: 0;
+      display: none;
+    }
+
+    .view.active {
+      display: grid;
+    }
+
+    .panel {
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+
+    .home {
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .intro,
+    .planet-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(8, 17, 39, 0.58);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .intro {
+      min-width: 0;
+      padding: 26px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 18px rgba(52, 211, 153, 0.95);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 12px;
+      font-size: clamp(36px, 5vw, 68px);
+      line-height: 1.02;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      margin-bottom: 22px;
+      color: var(--soft);
+      font-size: 17px;
+      line-height: 1.72;
+    }
+
+    .planet-card {
+      position: relative;
+      min-height: 220px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 55% 50%, rgba(56, 189, 248, 0.28), transparent 32%),
+        rgba(8, 17, 39, 0.55);
+    }
+
+    .planet {
+      position: absolute;
+      right: -48px;
+      top: 30px;
+      width: 210px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 34% 28%, rgba(255,255,255,0.95), rgba(125,211,252,0.72) 13%, transparent 22%),
+        radial-gradient(circle at 38% 30%, #7dd3fc 0 8%, #2563eb 34%, #0f2563 62%, #06101f 82%);
+      box-shadow: inset -24px -34px 60px rgba(0,0,0,0.56), 0 0 70px rgba(56,189,248,0.44);
+    }
+
+    .planet::before {
+      content: "";
+      position: absolute;
+      inset: 45% -44%;
+      height: 16px;
+      border: 1px solid rgba(125, 211, 252, 0.54);
+      border-left-color: transparent;
+      border-right-color: transparent;
+      border-radius: 50%;
+      transform: rotate(-14deg);
+    }
+
+    .planet-label {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      right: 108px;
+      color: var(--soft);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .home-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 16px;
+      overflow: auto;
+    }
+
+    .home-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .home-card h2 {
+      margin-bottom: 8px;
+      font-size: 20px;
+    }
+
+    .home-card p,
+    .step-item span,
+    .demo-card span,
+    .mission-card span {
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .demo-card {
+      border: 1px solid rgba(125, 211, 252, 0.16);
+      border-radius: var(--radius);
+      background: rgba(2, 6, 23, 0.34);
+      padding: 14px;
+    }
+
+    .demo-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .demo-card .actions {
+      margin-top: 12px;
+    }
+
+    .step-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .step-item {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+      border: 1px solid rgba(125, 211, 252, 0.16);
+      border-radius: var(--radius);
+      background: rgba(2, 6, 23, 0.36);
+    }
+
+    .num {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(125, 211, 252, 0.28);
+      border-radius: var(--radius);
+      color: var(--cyan);
+      background: rgba(14, 165, 233, 0.12);
+      font-weight: 800;
+    }
+
+    .step-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .voucher-link {
+      display: block;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid rgba(52, 211, 153, 0.34);
+      border-radius: var(--radius);
+      color: #bbf7d0;
+      background: rgba(22, 101, 52, 0.16);
+      line-height: 1.55;
+      word-break: break-all;
+      text-decoration: none;
+    }
+
+    .voucher-steps {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .voucher-step {
+      border: 1px solid rgba(125, 211, 252, 0.16);
+      border-radius: var(--radius);
+      background: rgba(2, 6, 23, 0.34);
+      overflow: hidden;
+    }
+
+    .voucher-step img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      background: rgba(2, 6, 23, 0.6);
+      border-bottom: 1px solid rgba(125, 211, 252, 0.14);
+    }
+
+    .voucher-step strong {
+      display: block;
+      padding: 10px 11px 2px;
+      font-size: 13px;
+    }
+
+    .voucher-step span {
+      display: block;
+      padding: 0 11px 11px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .btn {
+      min-height: 44px;
+      border: 1px solid rgba(125, 211, 252, 0.34);
+      border-radius: var(--radius);
+      color: var(--text);
+      background: rgba(15, 23, 42, 0.72);
+      padding: 10px 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      text-decoration: none;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(103, 232, 249, 0.68);
+      background: rgba(30, 41, 59, 0.86);
+    }
+
+    .btn.primary {
+      border-color: rgba(56, 189, 248, 0.78);
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      box-shadow: 0 18px 36px rgba(37, 99, 235, 0.34);
+    }
+
+    .btn.success {
+      border-color: rgba(52, 211, 153, 0.6);
+      background: linear-gradient(135deg, #059669, #0f766e);
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .chat-view {
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .stage-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(8, 17, 39, 0.58);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .stage-title {
+      margin: 0 0 6px;
+      font-size: clamp(24px, 3vw, 36px);
+    }
+
+    .stage-desc {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .stage-nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .chat {
+      min-height: 0;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(125, 211, 252, 0.14);
+    }
+
+    .key-row {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .api-key {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid rgba(125, 211, 252, 0.24);
+      border-radius: var(--radius);
+      color: var(--text);
+      background: rgba(2, 6, 23, 0.55);
+      padding: 11px 13px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border: 1px solid rgba(125, 211, 252, 0.22);
+      border-radius: 999px;
+      padding: 4px 10px;
+      color: var(--soft);
+      background: rgba(2, 6, 23, 0.42);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .badge.ok {
+      color: #bbf7d0;
+      border-color: rgba(52, 211, 153, 0.35);
+      background: rgba(22, 101, 52, 0.2);
+    }
+
+    .badge.warn {
+      color: #fde68a;
+      border-color: rgba(251, 191, 36, 0.35);
+      background: rgba(113, 63, 18, 0.22);
+    }
+
+    .message-list {
+      min-height: 0;
+      overflow: auto;
+      padding: 18px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .message {
+      display: grid;
+      gap: 7px;
+      max-width: 86%;
+    }
+
+    .message.user { justify-self: end; }
+    .message.assistant, .message.system { justify-self: start; }
+
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .bubble {
+      border: 1px solid rgba(125, 211, 252, 0.18);
+      border-radius: var(--radius);
+      background: rgba(2, 6, 23, 0.44);
+      color: var(--soft);
+      padding: 14px 15px;
+      line-height: 1.72;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .message.user .bubble {
+      color: #eff6ff;
+      border-color: rgba(59, 130, 246, 0.45);
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.55), rgba(14, 165, 233, 0.26));
+    }
+
+    .md h1, .md h2, .md h3 {
+      margin: 0.4em 0 0.35em;
+      line-height: 1.28;
+      color: var(--text);
+    }
+    .md h1 { font-size: 1.45em; }
+    .md h2 { font-size: 1.25em; }
+    .md h3 { font-size: 1.08em; }
+    .md p { margin: 0.35em 0; }
+    .md ul, .md ol { margin: 0.45em 0; padding-left: 1.35em; }
+    .md li { margin: 0.22em 0; }
+    .md code {
+      border: 1px solid rgba(125, 211, 252, 0.16);
+      border-radius: 6px;
+      padding: 0.12em 0.35em;
+      color: #c4f1ff;
+      background: rgba(0, 0, 0, 0.28);
+      font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.92em;
+    }
+    .md pre {
+      margin: 0.65em 0;
+      padding: 12px;
+      border: 1px solid rgba(125, 211, 252, 0.16);
+      border-radius: var(--radius);
+      background: rgba(0, 0, 0, 0.3);
+      overflow: auto;
+    }
+    .md pre code {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      white-space: pre;
+    }
+    .md blockquote {
+      margin: 0.65em 0;
+      padding-left: 12px;
+      border-left: 3px solid var(--blue);
+      color: var(--muted);
+    }
+    .md table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.65em 0;
+      font-size: 0.95em;
+    }
+    .md th, .md td {
+      border: 1px solid rgba(125, 211, 252, 0.18);
+      padding: 8px;
+      text-align: left;
+    }
+
+    .preview {
+      display: none;
+      width: min(260px, 100%);
+      max-height: 160px;
+      object-fit: contain;
+      border: 1px solid rgba(125, 211, 252, 0.22);
+      border-radius: var(--radius);
+      background: rgba(2, 6, 23, 0.65);
+      margin-top: 8px;
+    }
+
+    .composer {
+      display: grid;
+      gap: 10px;
+      padding: 14px 16px 16px;
+      border-top: 1px solid rgba(125, 211, 252, 0.14);
+      background: rgba(2, 6, 23, 0.24);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 86px;
+      resize: vertical;
+      border: 1px solid rgba(125, 211, 252, 0.24);
+      border-radius: var(--radius);
+      color: var(--text);
+      background: rgba(2, 6, 23, 0.55);
+      padding: 12px 13px;
+      line-height: 1.65;
+    }
+
+    .composer-tools, .left-tools, .right-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .composer-tools { justify-content: space-between; }
+
+    .file-input {
+      max-width: 260px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .mission {
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .mission-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      overflow: auto;
+      align-content: start;
+    }
+
+    .mission-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(8, 17, 39, 0.82));
+      padding: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .mission-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: var(--level-color, var(--blue));
+    }
+
+    .mission-card.beginner {
+      --level-color: var(--green);
+      --level-border: rgba(52, 211, 153, 0.55);
+      --level-bg: rgba(22, 101, 52, 0.24);
+    }
+
+    .mission-card.intermediate {
+      --level-color: var(--blue);
+      --level-border: rgba(56, 189, 248, 0.5);
+      --level-bg: rgba(14, 165, 233, 0.2);
+    }
+
+    .mission-card.advanced {
+      --level-color: var(--warning);
+      --level-border: rgba(251, 191, 36, 0.52);
+      --level-bg: rgba(113, 63, 18, 0.24);
+    }
+
+    .mission-card.recommended {
+      border-color: rgba(52, 211, 153, 0.5);
+    }
+
+    .mission-card h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .mission-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .level-tag {
+      flex: 0 0 auto;
+      border: 1px solid var(--level-border, rgba(125, 211, 252, 0.35));
+      border-radius: 999px;
+      padding: 4px 9px;
+      color: var(--text);
+      background: var(--level-bg, rgba(2, 6, 23, 0.36));
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .fit-signal {
+      display: grid;
+      gap: 7px;
+      padding: 10px;
+      border: 1px solid rgba(125, 211, 252, 0.15);
+      border-radius: var(--radius);
+      background: rgba(2, 6, 23, 0.3);
+    }
+
+    .fit-signal strong {
+      color: var(--soft);
+      font-size: 13px;
+    }
+
+    .fit-signal span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .mission-card ul {
+      margin: 0;
+      padding-left: 1.2em;
+      color: var(--soft);
+      line-height: 1.65;
+    }
+
+    .mission-card .btn {
+      margin-top: 2px;
+      width: 100%;
+    }
+
+    .loader {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.28);
+      border-top-color: white;
+      animation: spin 800ms linear infinite;
+    }
+
+    .loading .loader { display: inline-block; }
+    .loading .send-icon { display: none; }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 10;
+      display: none;
+      max-width: min(420px, calc(100vw - 36px));
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: rgba(2, 6, 23, 0.95);
+      color: var(--text);
+      padding: 13px 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .toast.show { display: block; }
+    .toast.error { border-color: rgba(251, 113, 133, 0.58); }
+
+    .guide-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(2, 6, 23, 0.22);
+      backdrop-filter: blur(7px);
+    }
+
+    .guide-overlay.show {
+      display: grid;
+    }
+
+    .guide-card {
+      width: min(560px, 100%);
+      border: 1px solid rgba(125, 211, 252, 0.34);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(circle at 84% 14%, rgba(56, 189, 248, 0.2), transparent 28%),
+        rgba(8, 17, 39, 0.78);
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
+      padding: 22px;
+    }
+
+    .guide-step {
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .guide-title {
+      margin: 0 0 10px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .guide-copy {
+      margin: 0;
+      color: var(--soft);
+      line-height: 1.7;
+    }
+
+    .guide-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 860px) {
+      body { overflow: hidden; }
+
+      .page {
+        width: min(100% - 24px, 620px);
+        padding: 14px 0;
+      }
+
+      .global-nav {
+        justify-content: flex-start;
+      }
+
+      .hero,
+      .home-grid,
+      .demo-grid,
+      .voucher-steps,
+      .stage-header,
+      .topbar,
+      .key-row,
+      .mission-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .planet-card { min-height: 150px; }
+      .stage-nav { justify-content: stretch; }
+      .message { max-width: 100%; }
+
+      .composer-tools,
+      .left-tools,
+      .right-tools,
+      .actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .btn,
+      .file-input {
+        width: 100%;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <nav class="global-nav" aria-label="Workshop 流程导航">
+      <button class="nav-tab active" type="button" data-nav="home">首页</button>
+      <button class="nav-tab" type="button" data-nav-stage="basic">基础对话</button>
+      <button class="nav-tab" type="button" data-nav-stage="ocr">OCR 测试</button>
+      <button class="nav-tab" type="button" data-nav-stage="vision">图片分析</button>
+      <button class="nav-tab" type="button" data-nav="mission">最终挑战</button>
+    </nav>
+
+    <section class="view home active" id="homeView">
+      <div class="hero">
+        <div class="intro">
+          <div class="eyebrow"><span class="dot" aria-hidden="true"></span> StepFun Build Gathering</div>
+          <h1>Step 3.7 Flash 现场体验</h1>
+          <p class="subtitle">福利先到先得，开小灶时间到。Workshop 开始前，先领取开发者平台 100 元免费 Token，再依次完成基础对话、OCR、图片识别分析，最后用工具接入阶跃 3.7 完成任务领取奖品。</p>
+          <div class="actions">
+            <a class="btn success" href="https://platform.stepfun.com/voucher?code=6qrZKIGIUvwneUmUVOoct5TWxef33YeVg1Bg1z6lQARoahohLJuuaTM0GDJrAq7UmI4LF5eDAsTGG" target="_blank" rel="noreferrer">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>
+              秒领 100 元 Token
+            </a>
+            <button class="btn primary" type="button" data-start-stage="basic">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+              开始测试
+            </button>
+          </div>
+        </div>
+        <div class="planet-card" aria-label="阶跃星辰太空视觉">
+          <div class="planet" aria-hidden="true"></div>
+          <div class="planet-label">一个模型，一套路线。完成任务后找工作人员确认领取奖品。</div>
+        </div>
+      </div>
+
+      <div class="home-grid">
+        <div class="home-card">
+          <h2>积分领取步骤</h2>
+          <p>阶跃专门给本次 Workshop 准备了能量补给。先领取额度，再开始后面的模型体验。</p>
+          <a class="voucher-link" href="https://platform.stepfun.com/voucher?code=6qrZKIGIUvwneUmUVOoct5TWxef33YeVg1Bg1z6lQARoahohLJuuaTM0GDJrAq7UmI4LF5eDAsTGG" target="_blank" rel="noreferrer">https://platform.stepfun.com/voucher?code=6qrZKIGIUvwneUmUVOoct5TWxef33YeVg1Bg1z6lQARoahohLJuuaTM0GDJrAq7UmI4LF5eDAsTGG</a>
+          <div class="voucher-steps">
+            <div class="voucher-step"><img src="资料/1.png" alt="复制兑换码步骤截图"><strong>1. 点击链接复制兑换码</strong><span>打开福利链接后复制页面中的兑换码。</span></div>
+            <div class="voucher-step"><img src="资料/2.png" alt="前往兑换步骤截图"><strong>2. 点击前往兑换</strong><span>跳转到阶跃官网的兑换页面。</span></div>
+            <div class="voucher-step"><img src="资料/3.png" alt="登录开放平台步骤截图"><strong>3. 登录开放平台</strong><span>第一次使用需要先填写开发者信息。</span></div>
+            <div class="voucher-step"><img src="资料/4.png" alt="兑换代金券步骤截图"><strong>4. 兑换代金券</strong><span>兑换完成后即可用于后续模型测试。</span></div>
+          </div>
+        </div>
+
+        <div class="home-card">
+          <h2>体验路线</h2>
+          <p>这是一条从低门槛体验到工具链实践的路线，适合初级开发者现场跟做。</p>
+          <div class="step-list">
+            <div class="step-item"><div class="num">1</div><div><strong>领取积分</strong><span>打开阶跃开放平台，领取积分并准备 API Key。</span></div></div>
+            <div class="step-item"><div class="num">2</div><div><strong>基础对话</strong><span>确认 Key 可用，体验 Markdown 输出和响应速度。</span></div></div>
+            <div class="step-item"><div class="num">3</div><div><strong>OCR 测试</strong><span>上传图片，让 step-3.7-flash 识别文字并结构化整理。</span></div></div>
+            <div class="step-item"><div class="num">4</div><div><strong>图片分析</strong><span>让模型分析图片内容、场景、风险和可做 Demo。</span></div></div>
+            <div class="step-item"><div class="num">5</div><div><strong>休闲体验广场</strong><span>打开现成 Demo，体验菜品拆解和英语笔记生成。</span></div></div>
+            <div class="step-item"><div class="num">6</div><div><strong>工具接入挑战</strong><span>按自己的熟练度选择 Cherry Studio、Trae、CodeBuddy 或 Claude Code，跟着入门文章完成一个任务。</span></div></div>
+          </div>
+        </div>
+
+        <div class="home-card">
+          <h2>休闲体验广场</h2>
+          <p>这里放两个现成多模态 Demo，参与者可以直接打开，快速理解阶跃 3.7 的图片理解、结构化生成和 HTML 页面生成能力。</p>
+          <div class="demo-grid">
+            <div class="demo-card">
+              <strong>食材拆解机</strong>
+              <span>上传菜品图片，拆成食材卡片，生成可保存分享的菜谱 HTML Mail。</span>
+              <div class="actions">
+                <a class="btn primary" href="recipe_multimodal_demo.html" target="_blank" rel="noreferrer">打开 Demo</a>
+              </div>
+            </div>
+            <div class="demo-card">
+              <strong>英语笔记炼金术</strong>
+              <span>上传英语笔记或 PPT 图片，转录 Markdown，生成复习计划和电子笔记 HTML。</span>
+              <div class="actions">
+                <a class="btn primary" href="english_note_multimodal_demo.html" target="_blank" rel="noreferrer">打开 Demo</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="home-card">
+          <h2>完成标准</h2>
+          <p>每位参与者完成任一工具链任务，或基于体验广场 Demo 做出一个改造版本，并向工作人员展示模型调用结果或作品，即可领取奖品。</p>
+          <div class="actions">
+            <button class="btn" type="button" data-start-stage="ocr">直接进入 OCR</button>
+            <button class="btn" type="button" data-start-stage="vision">直接进入图片分析</button>
+            <button class="btn" type="button" data-view="mission">查看最终挑战</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view chat-view" id="chatView">
+      <div class="stage-header">
+        <div>
+          <div class="eyebrow"><span class="dot" aria-hidden="true"></span> <span id="stageEyebrow">Stage 1</span></div>
+          <h2 class="stage-title" id="stageTitle">基础对话测试</h2>
+          <p class="stage-desc" id="stageDesc">确认 API Key 可用，并观察 step-3.7-flash 的 Markdown 输出。</p>
+        </div>
+        <div class="stage-nav">
+          <button class="btn" type="button" data-view="home">首页</button>
+          <button class="btn" id="openWindowBtn" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
+            新窗口
+          </button>
+          <button class="btn primary" id="nextStageBtn" type="button">下一步</button>
+        </div>
+      </div>
+
+      <section class="panel chat" aria-label="Step 3.7 Flash 对话窗口">
+        <div class="topbar">
+          <div class="key-row">
+            <input class="api-key" id="apiKey" type="password" placeholder="粘贴 STEP_API_KEY" autocomplete="off" aria-label="StepFun API Key">
+            <span class="badge warn" id="keyStatus">等待 Key</span>
+          </div>
+          <div class="right-tools">
+            <span class="badge">step-3.7-flash</span>
+            <button class="btn" id="clearBtn" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+              清空
+            </button>
+          </div>
+        </div>
+
+        <div class="message-list" id="messageList" aria-live="polite"></div>
+
+        <div class="composer">
+          <textarea id="prompt" placeholder="请在这里输入你想测试的问题。Ctrl / Cmd + Enter 发送"></textarea>
+          <img class="preview" id="preview" alt="上传图片预览">
+          <div class="composer-tools">
+            <div class="left-tools">
+              <input class="file-input" id="imageInput" type="file" accept="image/*" aria-label="上传图片">
+              <span class="hint" id="imageHint">图片可选；上传后会随下一条消息发送。</span>
+            </div>
+            <button class="btn primary" id="sendBtn" type="button">
+              <span class="loader" aria-hidden="true"></span>
+              <svg class="icon send-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+              发送
+            </button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="view mission" id="missionView">
+      <div class="stage-header">
+        <div>
+          <div class="eyebrow"><span class="dot" aria-hidden="true"></span> Final Challenge</div>
+          <h2 class="stage-title">接入阶跃 3.7 完成任务领取奖品</h2>
+          <p class="stage-desc">按自己的使用经验选择工具：Cherry Studio 适合初级用户，Trae 和 CodeBuddy 适合中级用户，Claude Code 适合高级用户。点击入门文章后继续深入学习。</p>
+        </div>
+        <div class="stage-nav">
+          <button class="btn" type="button" data-view="home">回首页</button>
+          <button class="btn" type="button" data-start-stage="vision">返回图片分析</button>
+        </div>
+      </div>
+
+      <div class="mission-grid" aria-label="按经验分级选择工具">
+        <div class="mission-card beginner recommended">
+          <div class="mission-head">
+            <h3>Cherry Studio</h3>
+            <span class="level-tag">初级</span>
+          </div>
+          <span>适合刚开始使用 AI 工具的参与者，先把模型、Key 和基础对话跑通，再逐步尝试图片与文档任务。</span>
+          <div class="fit-signal">
+            <strong>如果你想少配置、先看到效果</strong>
+            <span>从这里开始最稳，适合现场跟做和快速建立信心。</span>
+          </div>
+          <!-- <ul>
+            <li>完成模型配置</li>
+            <li>测试基础对话</li>
+            <li>尝试多模态输入</li>
+          </ul> -->
+          <a class="btn primary" href="https://my.feishu.cn/wiki/MH9Lw247Gin2Rqk1nHkcAjesn4c" target="_blank" rel="noreferrer">打开入门文章</a>
+        </div>
+
+        <div class="mission-card intermediate">
+          <div class="mission-head">
+            <h3>Trae</h3>
+            <span class="level-tag">中级</span>
+          </div>
+          <span>适合已经会做简单网页、小应用或项目改造的参与者，用阶跃 3.7 完成一个可运行的可视化任务。</span>
+          <div class="fit-signal">
+            <strong>如果你希望边写代码边看效果</strong>
+            <span>选择 Trae，适合前端页面、工具页和轻量应用。</span>
+          </div>
+          <!-- <ul>
+            <li>接入第三方模型</li>
+            <li>选择网页或工具任务</li>
+            <li>现场运行给工作人员看</li>
+          </ul> -->
+          <a class="btn primary" href="https://my.feishu.cn/wiki/KHOQwOzM4i0sy3kjOJGcHULdngc?from=from_copylink" target="_blank" rel="noreferrer">打开入门文章</a>
+        </div>
+
+        <div class="mission-card intermediate">
+          <div class="mission-head">
+            <h3>CodeBuddy</h3>
+            <span class="level-tag">中级</span>
+          </div>
+          <span>适合想在 IDE 辅助下完成开发任务的参与者，把 OCR 或图片分析结果做成一个简单可交互作品。</span>
+          <div class="fit-signal">
+            <strong>如果你想让 AI 帮你拆任务、补代码</strong>
+            <span>选择 CodeBuddy，适合已有一点开发基础的人。</span>
+          </div>
+          <!-- <ul>
+            <li>导入 API Key</li>
+            <li>复用本页 Prompt</li>
+            <li>完成即可领取奖品</li>
+          </ul> -->
+          <a class="btn primary" href="https://my.feishu.cn/wiki/BSxXw2wM7iTF5HkinZmcSJE0nnh?from=from_copylink" target="_blank" rel="noreferrer">打开入门文章</a>
+        </div>
+
+        <div class="mission-card advanced">
+          <div class="mission-head">
+            <h3>Claude Code</h3>
+            <span class="level-tag">高级</span>
+          </div>
+          <span>适合已有命令行和项目工程经验的参与者，直接在项目里让 Agent 读代码、改页面、生成文档。</span>
+          <div class="fit-signal">
+            <strong>如果你习惯终端和真实项目</strong>
+            <span>选择 Claude Code，适合复杂代码修改和更完整的工程流程。</span>
+          </div>
+          <!-- <ul>
+            <li>配置阶跃 3.7 模型</li>
+            <li>选择一个小需求</li>
+            <li>让 Agent 完成并展示结果</li>
+          </ul> -->
+          <a class="btn primary" href="https://my.feishu.cn/wiki/M6scwkphVifOj2k75Kmcg0t6nPg" target="_blank" rel="noreferrer">打开入门文章</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="guide-overlay show" id="guideOverlay" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="guide-card">
+      <div class="guide-step" id="guideStep">Step 1 / 5</div>
+      <h2 class="guide-title" id="guideTitle">先领取积分</h2>
+      <p class="guide-copy" id="guideCopy">点击首页的福利链接，复制兑换码并前往阶跃开放平台兑换 100 元免费 Token。完成后准备 API Key。</p>
+      <div class="guide-actions">
+        <button class="btn" id="guideSkip" type="button">跳过</button>
+        <button class="btn primary" id="guideNext" type="button">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const endpoint = "https://api.stepfun.com/v1/chat/completions";
+    const model = "step-3.7-flash";
+    const systemPrompt = "你是由阶跃星辰提供的AI聊天助手，你擅长中文、英文以及多种其他语言的对话。在保证用户数据安全的前提下，你能对用户的问题和请求作出快速和精准的回答。同时，你的回答和建议应该拒绝黄赌毒、暴力恐怖主义的内容。请优先使用 Markdown 组织回答。";
+
+    const stages = {
+      basic: {
+        order: 1,
+        next: "ocr",
+        eyebrow: "Stage 1 · Basic Chat",
+        title: "基础对话测试",
+        desc: "确认 API Key 可用，并观察 step-3.7-flash 的 Markdown 输出。",
+        intro: "这是基础对话测试。请自行输入你想测试的问题，观察模型回复质量和单次耗时。",
+        prompt: "",
+        imageRequired: false,
+        imageHint: "图片可选；基础对话不需要上传图片。"
+      },
+      ocr: {
+        order: 2,
+        next: "vision",
+        eyebrow: "Stage 2 · OCR",
+        title: "OCR 文字识别测试",
+        desc: "上传一张含文字的图片，让 step-3.7-flash 识别并整理成结构化结果。",
+        intro: "这是 OCR 测试。请上传一张含文字的图片，并自行输入你希望模型完成的 OCR 任务。",
+        prompt: "",
+        imageRequired: true,
+        imageHint: "需要上传图片；图片会随下一条消息发送。"
+      },
+      vision: {
+        order: 3,
+        next: "mission",
+        eyebrow: "Stage 3 · Image Analysis",
+        title: "图片识别分析测试",
+        desc: "上传任意图片，让 step-3.7-flash 分析场景、对象、重点和可落地应用。",
+        intro: "这是图片识别分析测试。请上传一张图片，并自行输入你希望模型分析的方向。",
+        prompt: "",
+        imageRequired: true,
+        imageHint: "需要上传图片；图片会随下一条消息发送。"
+      }
+    };
+
+    const homeView = document.querySelector("#homeView");
+    const chatView = document.querySelector("#chatView");
+    const missionView = document.querySelector("#missionView");
+    const navTabs = document.querySelectorAll(".nav-tab");
+    const stageEyebrow = document.querySelector("#stageEyebrow");
+    const stageTitle = document.querySelector("#stageTitle");
+    const stageDesc = document.querySelector("#stageDesc");
+    const nextStageBtn = document.querySelector("#nextStageBtn");
+    const apiKeyEl = document.querySelector("#apiKey");
+    const promptEl = document.querySelector("#prompt");
+    const imageEl = document.querySelector("#imageInput");
+    const previewEl = document.querySelector("#preview");
+    const imageHint = document.querySelector("#imageHint");
+    const sendBtn = document.querySelector("#sendBtn");
+    const clearBtn = document.querySelector("#clearBtn");
+    const openWindowBtn = document.querySelector("#openWindowBtn");
+    const messageList = document.querySelector("#messageList");
+    const keyStatus = document.querySelector("#keyStatus");
+    const toast = document.querySelector("#toast");
+    const guideOverlay = document.querySelector("#guideOverlay");
+    const guideStep = document.querySelector("#guideStep");
+    const guideTitle = document.querySelector("#guideTitle");
+    const guideCopy = document.querySelector("#guideCopy");
+    const guideNext = document.querySelector("#guideNext");
+    const guideSkip = document.querySelector("#guideSkip");
+
+    let currentStage = "basic";
+    let imageDataUrl = "";
+    let conversation = [];
+    let guideIndex = 0;
+
+    const guideSteps = [
+      {
+        title: "先领取积分",
+        copy: "点击首页的福利链接，复制兑换码并前往阶跃开放平台兑换 100 元免费 Token。完成后准备 API Key。",
+        target: () => showView("home")
+      },
+      {
+        title: "完成基础对话",
+        copy: "进入基础对话页，粘贴 API Key，自行输入一个问题，观察 step-3.7-flash 的回复质量和单次耗时。",
+        target: () => startStage("basic")
+      },
+      {
+        title: "测试 OCR",
+        copy: "进入 OCR 测试页，上传一张带文字的图片，然后自己输入识别任务，让模型读取图片内容。",
+        target: () => startStage("ocr")
+      },
+      {
+        title: "测试图片分析",
+        copy: "进入图片分析页，上传任意图片，让模型分析场景、主体、用途和不确定点。",
+        target: () => startStage("vision")
+      },
+      {
+        title: "完成最终挑战",
+        copy: "最后按自己的熟练度选择 Cherry Studio、Trae、CodeBuddy 或 Claude Code，打开对应入门文章，接入阶跃 3.7 完成一个小任务，并向工作人员展示领取奖品。",
+        target: () => showView("mission")
+      }
+    ];
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderInlineMarkdown(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    }
+
+    function renderMarkdown(markdown) {
+      const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
+      const html = [];
+      let inCode = false;
+      let codeLines = [];
+      let inUl = false;
+      let inOl = false;
+      let inTable = false;
+
+      function closeLists() {
+        if (inUl) {
+          html.push("</ul>");
+          inUl = false;
+        }
+        if (inOl) {
+          html.push("</ol>");
+          inOl = false;
+        }
+      }
+
+      function closeTable() {
+        if (inTable) {
+          html.push("</tbody></table>");
+          inTable = false;
+        }
+      }
+
+      for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        if (trimmed.startsWith("```")) {
+          if (inCode) {
+            html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+            codeLines = [];
+            inCode = false;
+          } else {
+            closeLists();
+            closeTable();
+            inCode = true;
+          }
+          continue;
+        }
+
+        if (inCode) {
+          codeLines.push(line);
+          continue;
+        }
+
+        if (!trimmed) {
+          closeLists();
+          closeTable();
+          continue;
+        }
+
+        if (/^\|(.+)\|$/.test(trimmed)) {
+          closeLists();
+          const cells = trimmed.slice(1, -1).split("|").map((cell) => renderInlineMarkdown(cell.trim()));
+          const next = lines[i + 1]?.trim() || "";
+          if (!inTable) {
+            html.push("<table>");
+            if (/^\|[\s:-]+\|/.test(next)) {
+              html.push(`<thead><tr>${cells.map((cell) => `<th>${cell}</th>`).join("")}</tr></thead><tbody>`);
+              i += 1;
+            } else {
+              html.push("<tbody>");
+              html.push(`<tr>${cells.map((cell) => `<td>${cell}</td>`).join("")}</tr>`);
+            }
+            inTable = true;
+          } else {
+            html.push(`<tr>${cells.map((cell) => `<td>${cell}</td>`).join("")}</tr>`);
+          }
+          continue;
+        }
+
+        closeTable();
+
+        if (/^###\s+/.test(trimmed)) {
+          closeLists();
+          html.push(`<h3>${renderInlineMarkdown(trimmed.replace(/^###\s+/, ""))}</h3>`);
+          continue;
+        }
+        if (/^##\s+/.test(trimmed)) {
+          closeLists();
+          html.push(`<h2>${renderInlineMarkdown(trimmed.replace(/^##\s+/, ""))}</h2>`);
+          continue;
+        }
+        if (/^#\s+/.test(trimmed)) {
+          closeLists();
+          html.push(`<h1>${renderInlineMarkdown(trimmed.replace(/^#\s+/, ""))}</h1>`);
+          continue;
+        }
+        if (/^>\s?/.test(trimmed)) {
+          closeLists();
+          html.push(`<blockquote>${renderInlineMarkdown(trimmed.replace(/^>\s?/, ""))}</blockquote>`);
+          continue;
+        }
+        if (/^[-*]\s+/.test(trimmed)) {
+          if (!inUl) {
+            closeLists();
+            html.push("<ul>");
+            inUl = true;
+          }
+          html.push(`<li>${renderInlineMarkdown(trimmed.replace(/^[-*]\s+/, ""))}</li>`);
+          continue;
+        }
+        if (/^\d+\.\s+/.test(trimmed)) {
+          if (!inOl) {
+            closeLists();
+            html.push("<ol>");
+            inOl = true;
+          }
+          html.push(`<li>${renderInlineMarkdown(trimmed.replace(/^\d+\.\s+/, ""))}</li>`);
+          continue;
+        }
+
+        closeLists();
+        html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+      }
+
+      if (inCode) html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+      closeLists();
+      closeTable();
+      return html.join("");
+    }
+
+    function showToast(message, type = "info") {
+      toast.textContent = message;
+      toast.className = `toast show ${type === "error" ? "error" : ""}`;
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => {
+        toast.className = "toast";
+      }, 3200);
+    }
+
+    function renderGuide() {
+      const step = guideSteps[guideIndex];
+      guideStep.textContent = `Step ${guideIndex + 1} / ${guideSteps.length}`;
+      guideTitle.textContent = step.title;
+      guideCopy.textContent = step.copy;
+      guideNext.textContent = guideIndex === guideSteps.length - 1 ? "开始体验" : "下一步";
+      step.target();
+    }
+
+    function closeGuide() {
+      guideOverlay.classList.remove("show");
+    }
+
+    function showView(name) {
+      homeView.classList.toggle("active", name === "home");
+      chatView.classList.toggle("active", name === "chat");
+      missionView.classList.toggle("active", name === "mission");
+      updateNav(name);
+    }
+
+    function updateNav(viewName) {
+      navTabs.forEach((tab) => {
+        const isActive =
+          (tab.dataset.nav === viewName) ||
+          (viewName === "chat" && tab.dataset.navStage === currentStage);
+        tab.classList.toggle("active", isActive);
+      });
+    }
+
+    function addMessage(role, content, options = {}) {
+      const article = document.createElement("article");
+      article.className = `message ${role}`;
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = options.meta || (role === "user" ? "你" : "Step 3.7 Flash");
+
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${role === "assistant" ? "md" : ""}`;
+
+      if (role === "assistant" && options.markdown !== false) {
+        bubble.innerHTML = renderMarkdown(content);
+      } else {
+        bubble.textContent = content;
+      }
+
+      if (options.imageSrc) {
+        const image = document.createElement("img");
+        image.className = "preview";
+        image.style.display = "block";
+        image.src = options.imageSrc;
+        image.alt = "随消息发送的图片";
+        bubble.appendChild(image);
+      }
+
+      article.append(meta, bubble);
+      messageList.appendChild(article);
+      messageList.scrollTop = messageList.scrollHeight;
+      return bubble;
+    }
+
+    function resetConversation(stageKey) {
+      const stage = stages[stageKey];
+      conversation = [{ role: "system", content: systemPrompt }];
+      messageList.innerHTML = "";
+      addMessage("assistant", stage.intro, { meta: "Step 3.7 Flash" });
+      promptEl.value = stage.prompt;
+      imageDataUrl = "";
+      imageEl.value = "";
+      previewEl.style.display = "none";
+      previewEl.removeAttribute("src");
+      imageHint.textContent = stage.imageHint;
+    }
+
+    function startStage(stageKey) {
+      currentStage = stageKey;
+      const stage = stages[stageKey];
+      stageEyebrow.textContent = stage.eyebrow;
+      stageTitle.textContent = stage.title;
+      stageDesc.textContent = stage.desc;
+      nextStageBtn.textContent = stage.next === "mission" ? "最终挑战" : "下一步";
+      resetConversation(stageKey);
+      showView("chat");
+    }
+
+    function updateKeyStatus() {
+      const ready = apiKeyEl.value.trim().length > 0;
+      keyStatus.textContent = ready ? "Key 已就绪" : "等待 Key";
+      keyStatus.className = `badge ${ready ? "ok" : "warn"}`;
+    }
+
+    function buildUserMessage(prompt) {
+      if (!imageDataUrl) {
+        return { role: "user", content: prompt };
+      }
+
+      return {
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: imageDataUrl } }
+        ]
+      };
+    }
+
+    function setLoading(isLoading) {
+      sendBtn.disabled = isLoading;
+      sendBtn.classList.toggle("loading", isLoading);
+    }
+
+    async function send() {
+      const apiKey = apiKeyEl.value.trim();
+      const prompt = promptEl.value.trim();
+      const stage = stages[currentStage];
+
+      if (!apiKey) {
+        showToast("请先粘贴 API Key。", "error");
+        apiKeyEl.focus();
+        return;
+      }
+
+      if (!prompt) {
+        showToast("请输入内容。", "error");
+        promptEl.focus();
+        return;
+      }
+
+      if (stage.imageRequired && !imageDataUrl) {
+        showToast("当前测试需要先上传图片。", "error");
+        imageEl.focus();
+        return;
+      }
+
+      const sentImage = imageDataUrl;
+      const userMessage = buildUserMessage(prompt);
+      conversation.push(userMessage);
+      addMessage("user", prompt, { imageSrc: sentImage || "" });
+
+      promptEl.value = "";
+      imageDataUrl = "";
+      imageEl.value = "";
+      previewEl.style.display = "none";
+      previewEl.removeAttribute("src");
+      imageHint.textContent = stage.imageHint;
+
+      const pendingBubble = addMessage("assistant", "思考中...", { markdown: false, meta: "Step 3.7 Flash · 思考中" });
+      setLoading(true);
+      const started = performance.now();
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model,
+            messages: conversation
+          })
+        });
+
+        const elapsed = Math.round(performance.now() - started);
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { raw: text };
+        }
+
+        if (!response.ok) {
+          throw new Error(data?.error?.message || data?.message || text || `HTTP ${response.status}`);
+        }
+
+        const answer = data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || JSON.stringify(data, null, 2);
+        conversation.push({ role: "assistant", content: answer });
+        pendingBubble.className = "bubble md";
+        pendingBubble.innerHTML = renderMarkdown(answer);
+        const meta = pendingBubble.parentElement?.querySelector(".meta");
+        if (meta) meta.textContent = `Step 3.7 Flash · ${elapsed}ms`;
+        showToast("模型响应已返回。");
+      } catch (error) {
+        conversation.pop();
+        pendingBubble.textContent = `请求失败：${error.message}\n\n常见原因：浏览器 CORS 拦截、API Key 无权限、step-3.7-flash 当前账号不支持图片输入，或图片过大。`;
+        showToast("请求失败，请查看对话区。", "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    document.querySelectorAll("[data-start-stage]").forEach((button) => {
+      button.addEventListener("click", () => startStage(button.dataset.startStage));
+    });
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => showView(button.dataset.view));
+    });
+
+    document.querySelectorAll("[data-nav-stage]").forEach((button) => {
+      button.addEventListener("click", () => startStage(button.dataset.navStage));
+    });
+
+    document.querySelectorAll("[data-nav]").forEach((button) => {
+      button.addEventListener("click", () => showView(button.dataset.nav));
+    });
+
+    guideNext.addEventListener("click", () => {
+      if (guideIndex >= guideSteps.length - 1) {
+        closeGuide();
+        return;
+      }
+      guideIndex += 1;
+      renderGuide();
+    });
+
+    guideSkip.addEventListener("click", closeGuide);
+
+    nextStageBtn.addEventListener("click", () => {
+      const next = stages[currentStage].next;
+      if (next === "mission") {
+        showView("mission");
+      } else {
+        startStage(next);
+      }
+    });
+
+    apiKeyEl.addEventListener("input", updateKeyStatus);
+    clearBtn.addEventListener("click", () => resetConversation(currentStage));
+    openWindowBtn.addEventListener("click", () => {
+      window.open(location.href, "step37WorkshopChat", "width=1100,height=820,noopener,noreferrer");
+    });
+    sendBtn.addEventListener("click", send);
+
+    imageEl.addEventListener("change", () => {
+      const file = imageEl.files?.[0];
+      if (!file) {
+        imageDataUrl = "";
+        previewEl.style.display = "none";
+        imageHint.textContent = stages[currentStage].imageHint;
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        imageDataUrl = String(reader.result || "");
+        previewEl.src = imageDataUrl;
+        previewEl.style.display = "block";
+        imageHint.textContent = "图片已就绪，将随下一条消息发送。";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    promptEl.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        send();
+      }
+    });
+
+    updateKeyStatus();
+    resetConversation("basic");
+    renderGuide();
+  </script>
+</body>
+</html>
