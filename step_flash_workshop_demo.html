@@ -800,8 +800,7 @@
 
     .demo-plaza .demo-grid {
       margin-top: 0;
-      grid-template-columns: 1fr;
-      max-width: 760px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     }
 
     .mission-grid {
@@ -1546,6 +1545,7 @@
       min-height: 100vh;
       overflow: visible;
       grid-template-rows: auto auto;
+      align-content: start;
     }
 
     body.is-home .home,
@@ -1610,7 +1610,7 @@
           </h1>
           <p class="subtitle">i build with models</p>
           <div class="actions">
-            <a class="btn success" href="https://platform.stepfun.com/voucher?code=2Wnj9SGeFzSYAU32UKNapLPID5JPUP2MiXHUCtBU5IFnEbo3nAasRSnzD3FEKSsIEiWNNFXpiWboq&referrer=luma&utm_source=luma" target="_blank" rel="noreferrer">
+            <a class="btn success" href="https://platform.stepfun.com/voucher?code=2cbgE4eJONEgQ2PSV5xorqTYbE2HC6CSBQr2zVhUKrjEQ6qdpYVwfY3Yt0cHv71Cgbe7Bfj1gppq8" target="_blank" rel="noreferrer">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>
               秒领 100 元 Token
             </a>
@@ -1630,7 +1630,7 @@
         <div class="home-card">
           <h2>积分领取步骤</h2>
           <p>阶跃专门给本次 Workshop 准备了能量补给。先领取额度，再开始后面的模型体验。</p>
-          <a class="voucher-link" href="https://platform.stepfun.com/voucher?code=2Wnj9SGeFzSYAU32UKNapLPID5JPUP2MiXHUCtBU5IFnEbo3nAasRSnzD3FEKSsIEiWNNFXpiWboq&referrer=luma&utm_source=luma" target="_blank" rel="noreferrer">https://platform.stepfun.com/voucher?code=2Wnj9SGeFzSYAU32UKNapLPID5JPUP2MiXHUCtBU5IFnEbo3nAasRSnzD3FEKSsIEiWNNFXpiWboq&referrer=luma&utm_source=luma</a>
+          <a class="voucher-link" href="https://platform.stepfun.com/voucher?code=2cbgE4eJONEgQ2PSV5xorqTYbE2HC6CSBQr2zVhUKrjEQ6qdpYVwfY3Yt0cHv71Cgbe7Bfj1gppq8" target="_blank" rel="noreferrer">https://platform.stepfun.com/voucher?code=2cbgE4eJONEgQ2PSV5xorqTYbE2HC6CSBQr2zVhUKrjEQ6qdpYVwfY3Yt0cHv71Cgbe7Bfj1gppq8</a>
           <div class="voucher-steps">
             <div class="voucher-step"><img src="资料/1.png" alt="复制兑换码步骤截图"><strong>1. 点击链接复制兑换码</strong><span>打开福利链接后复制页面中的兑换码。</span></div>
             <div class="voucher-step"><img src="资料/2.png" alt="前往兑换步骤截图"><strong>2. 点击前往兑换</strong><span>跳转到阶跃官网的兑换页面。</span></div>
@@ -1692,6 +1692,13 @@
             <span>上传英语笔记或 PPT 图片，转录 Markdown，生成复习计划和电子笔记 HTML。</span>
             <div class="actions">
               <a class="btn primary" href="english_note_multimodal_demo.html" target="_blank" rel="noreferrer">打开 Demo</a>
+            </div>
+          </div>
+          <div class="demo-card">
+            <strong>宠物内心 OS</strong>
+            <span>上传宠物照片或视频，让 step-3.7 用第一人称生成它的内心独白与吐槽。</span>
+            <div class="actions">
+              <a class="btn primary" href="https://pet.iphoton.cc/" target="_blank" rel="noreferrer">打开 Demo</a>
             </div>
           </div>
         </div>
